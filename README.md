@@ -1,6 +1,8 @@
 # Parsemail - simple email parsing Go library
 
-[![Build Status](https://circleci.com/gh/k3a/parsemail.svg?style=shield)](https://circleci.com/gh/k3a/parsemail) [![Coverage Status](https://coveralls.io/repos/github/k3a/parsemail/badge.svg?branch=master)](https://coveralls.io/github/k3a/parsemail?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/k3a/parsemail)](https://goreportcard.com/report/github.com/k3a/parsemail)
+[![test](https://github.com/k3a/parsemail/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/k3a/parsemail/actions/workflows/test.yml)
+[![coverage](https://raw.githubusercontent.com/k3a/parsemail/badges/.badges/master/coverage.svg)](https://github.com/k3a/parsemail/tree/badges)
+[![Go Report Card](https://goreportcard.com/badge/github.com/k3a/parsemail)](https://goreportcard.com/report/github.com/k3a/parsemail)
 
 > The [original repo](https://github.com/DusanKasan/parsemail) is unmaintained. This is an active fork replacing the original repo. Contributions are welcome.
 
