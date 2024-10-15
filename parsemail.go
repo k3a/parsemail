@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"mime/quotedprintable"
@@ -49,28 +48,28 @@ func Parse(r io.Reader) (email Email, err error) {
 	case contentTypeMultipartRelated:
 		email.TextBody, email.HTMLBody, email.EmbeddedFiles, err = parseMultipartRelated(msg.Body, params["boundary"])
 	case contentTypeTextPlain:
-		message, _ := ioutil.ReadAll(msg.Body)
+		message, _ := io.ReadAll(msg.Body)
 		var reader io.Reader
 		reader, err = decodeContent(strings.NewReader(string(message[:])), cte)
 		if err != nil {
 			return
 		}
 
-		message, err = ioutil.ReadAll(reader)
+		message, err = io.ReadAll(reader)
 		if err != nil {
 			return
 		}
 
 		email.TextBody = strings.TrimSuffix(string(message[:]), "\n")
 	case contentTypeTextHtml:
-		message, _ := ioutil.ReadAll(msg.Body)
+		message, _ := io.ReadAll(msg.Body)
 		var reader io.Reader
 		reader, err = decodeContent(strings.NewReader(string(message[:])), cte)
 		if err != nil {
 			return
 		}
 
-		message, err = ioutil.ReadAll(reader)
+		message, err = io.ReadAll(reader)
 		if err != nil {
 			return
 		}
@@ -88,7 +87,7 @@ func Parse(r io.Reader) (email Email, err error) {
 func createEmailFromHeader(header mail.Header) (email Email, err error) {
 	hp := headerParser{header: &header}
 
-	email.Subject = decodeMimeSentence(header.Get("Subject"))
+	email.Subject = DecodeMimeSentence(header.Get("Subject"))
 	email.From = hp.parseAddressList(header.Get("From"))
 	email.Sender = hp.parseAddress(header.Get("Sender"))
 	email.ReplyTo = hp.parseAddressList(header.Get("Reply-To"))
@@ -180,7 +179,7 @@ func parseMultipartRelated(msg io.Reader, boundary string) (textBody, htmlBody s
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
 			}
-			ppContent, err := ioutil.ReadAll(decoded)
+			ppContent, err := io.ReadAll(decoded)
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
 			}
@@ -191,7 +190,7 @@ func parseMultipartRelated(msg io.Reader, boundary string) (textBody, htmlBody s
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
 			}
-			ppContent, err := ioutil.ReadAll(decoded)
+			ppContent, err := io.ReadAll(decoded)
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
 			}
@@ -247,7 +246,7 @@ func parseMultipartAlternative(msg io.Reader, boundary string) (textBody, htmlBo
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
 			}
-			ppContent, err := ioutil.ReadAll(decoded)
+			ppContent, err := io.ReadAll(decoded)
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
 			}
@@ -258,7 +257,7 @@ func parseMultipartAlternative(msg io.Reader, boundary string) (textBody, htmlBo
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
 			}
-			ppContent, err := ioutil.ReadAll(decoded)
+			ppContent, err := io.ReadAll(decoded)
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
 			}
@@ -340,7 +339,7 @@ func parseMultipartMixed(msg io.Reader, boundary string) (textBody, htmlBody str
 			if err != nil {
 				return textBody, htmlBody, attachments, embeddedFiles, err
 			}
-			ppContent, err := ioutil.ReadAll(decoded)
+			ppContent, err := io.ReadAll(decoded)
 			if err != nil {
 				return textBody, htmlBody, attachments, embeddedFiles, err
 			}
@@ -351,7 +350,7 @@ func parseMultipartMixed(msg io.Reader, boundary string) (textBody, htmlBody str
 			if err != nil {
 				return textBody, htmlBody, attachments, embeddedFiles, err
 			}
-			ppContent, err := ioutil.ReadAll(decoded)
+			ppContent, err := io.ReadAll(decoded)
 			if err != nil {
 				return textBody, htmlBody, attachments, embeddedFiles, err
 			}
@@ -365,7 +364,7 @@ func parseMultipartMixed(msg io.Reader, boundary string) (textBody, htmlBody str
 	return textBody, htmlBody, attachments, embeddedFiles, err
 }
 
-func decodeMimeSentence(s string) string {
+func DecodeMimeSentence(s string) string {
 	result := []string{}
 	ss := strings.Split(s, " ")
 
@@ -393,7 +392,7 @@ func decodeHeaderMime(header mail.Header) (mail.Header, error) {
 
 		parsedHeaderData := []string{}
 		for _, headerValue := range headerData {
-			parsedHeaderData = append(parsedHeaderData, decodeMimeSentence(headerValue))
+			parsedHeaderData = append(parsedHeaderData, DecodeMimeSentence(headerValue))
 		}
 
 		parsedHeader[headerName] = parsedHeaderData
@@ -407,7 +406,7 @@ func isEmbeddedFile(part *multipart.Part) bool {
 }
 
 func decodeEmbeddedFile(part *multipart.Part) (ef EmbeddedFile, err error) {
-	cid := decodeMimeSentence(part.Header.Get("Content-Id"))
+	cid := DecodeMimeSentence(part.Header.Get("Content-Id"))
 	decoded, err := decodeContent(part, part.Header.Get("Content-Transfer-Encoding"))
 	if err != nil {
 		return
@@ -425,7 +424,7 @@ func isAttachment(part *multipart.Part) bool {
 }
 
 func decodeAttachment(part *multipart.Part) (at Attachment, err error) {
-	filename := decodeMimeSentence(part.FileName())
+	filename := DecodeMimeSentence(part.FileName())
 	decoded, err := decodeContent(part, part.Header.Get("Content-Transfer-Encoding"))
 	if err != nil {
 		return
@@ -442,14 +441,14 @@ func decodeContent(content io.Reader, encoding string) (io.Reader, error) {
 	switch strings.ToLower(encoding) {
 	case "base64":
 		decoded := base64.NewDecoder(base64.StdEncoding, content)
-		b, err := ioutil.ReadAll(decoded)
+		b, err := io.ReadAll(decoded)
 		if err != nil {
 			return nil, err
 		}
 		return bytes.NewReader(b), nil
 	case "quoted-printable":
 		decoded := quotedprintable.NewReader(content)
-		b, err := ioutil.ReadAll(decoded)
+		b, err := io.ReadAll(decoded)
 		if err != nil {
 			return nil, err
 		}
@@ -460,7 +459,7 @@ func decodeContent(content io.Reader, encoding string) (io.Reader, error) {
 	// "Binary" means that not only may non-ASCII characters be present, but also that the lines are not necessarily short enough for SMTP transport.
 	case "", "7bit", "8bit", "binary":
 		decoded := quotedprintable.NewReader(content)
-		b, err := ioutil.ReadAll(decoded)
+		b, err := io.ReadAll(decoded)
 		if err != nil {
 			return nil, err
 		}
