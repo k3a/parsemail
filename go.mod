@@ -1,3 +1,3 @@
-module github.com/k3a/parsemail
+module github.com/malumar/parsemail
 
 go 1.14
