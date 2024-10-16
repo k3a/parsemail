@@ -113,7 +113,7 @@ func createEmailFromHeader(header mail.Header) (email Email, err error) {
 
 	//decode whole header for easier access to extra fields
 	//todo: should we decode? aren't only standard fields mime encoded?
-	email.Header, err = decodeHeaderMime(header)
+	email.Header, err = DecodeHeaderMime(header)
 	if err != nil {
 		return
 	}
@@ -385,7 +385,7 @@ func DecodeMimeSentence(s string) string {
 	return strings.Join(result, "")
 }
 
-func decodeHeaderMime(header mail.Header) (mail.Header, error) {
+func DecodeHeaderMime(header mail.Header) (mail.Header, error) {
 	parsedHeader := map[string][]string{}
 
 	for headerName, headerData := range header {
